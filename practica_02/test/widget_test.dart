@@ -7,7 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:practica_02/src/app.dart';
 import 'package:practica_02/main.dart';
 
 void main() {
