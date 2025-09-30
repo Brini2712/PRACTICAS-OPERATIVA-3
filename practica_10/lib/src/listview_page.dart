@@ -41,7 +41,7 @@ class ListaPage extends StatelessWidget {
             title: Text('${_clasesPokemon[index]}'),
             leading: CircleAvatar(
               backgroundImage: NetworkImage(
-                'https://pngimg.com/uploads/pokeball/pokeball_PNG12.png',
+                'https://cdn-icons-png.flaticon.com/512/188/188918.png',
               ),
               radius: 16.0,
             ),
