@@ -14,8 +14,8 @@ class _SharedPageState extends State<SharedPage> {
 
   Future<void> _grabarDatos() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('edad', 33);
-    await prefs.setString('nombre', 'Gibrán Vader');
+    await prefs.setInt('edad', 24);
+    await prefs.setString('nombre', 'Britney Sanchez');
   }
 
   Future<void> _leerDatos() async {
