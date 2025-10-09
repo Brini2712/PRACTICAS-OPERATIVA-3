@@ -1,295 +1,131 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 
 class CrudPage extends StatefulWidget {
+  const CrudPage({super.key});
+
   @override
   _CrudPageState createState() => _CrudPageState();
 }
 
 class _CrudPageState extends State<CrudPage> {
+  late String _path;
   late Database database;
-  List<Map<String, dynamic>> items = [];
 
   @override
   void initState() {
+    _createDB();
     super.initState();
-    _initializeDatabase();
   }
 
-  Future<void> _initializeDatabase() async {
+  // --- CREADO BD
+  void _createDB() async {
+    var dbpath = await getDatabasesPath();
+
+    _path = '${dbpath}my_db.db';
+
     database = await openDatabase(
-      join(await getDatabasesPath(), 'practica14.db'),
-      onCreate: (db, version) {
-        return db.execute(
-          'CREATE TABLE items(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT)',
+      _path,
+      version: 1,
+      onCreate: (Database db, int version) async {
+        await db.execute(
+          'CREATE TABLE Test (id INTEGER PRIMARY KEY, name TEXT, nickname TEXT)',
         );
       },
-      version: 1,
     );
-    _loadItems();
   }
 
-  Future<void> _loadItems() async {
-    final List<Map<String, dynamic>> maps = await database.query('items');
-    setState(() {
-      items = maps;
+  // --- INSERT DB
+  void _insertDB() async {
+    await database.transaction((txn) async {
+      int reg1 = await txn.rawInsert(
+        'INSERT INTO Test (name, nickname) VALUES ("Din Djarin", "The Mandalorian")',
+      );
+      print('Insert $reg1');
+
+      int reg2 = await txn.rawInsert(
+        'INSERT INTO Test (name, nickname) VALUES (?,?)',
+        ['Grogu', 'The Child'],
+      );
+      print('Insert $reg2');
     });
   }
 
-  Future<void> _insertItem(String name, String description) async {
-    await database.insert('items', {
-      'name': name,
-      'description': description,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-    _loadItems();
+  // --- REMOVE DB
+  void _removeDB() async {
+    int rem = await database.rawDelete('DELETE FROM Test WHERE name = ?', [
+      'Grogu',
+    ]);
+    print('Remove: $rem');
   }
 
-  Future<void> _updateItem(int id, String name, String description) async {
-    await database.update(
-      'items',
-      {'name': name, 'description': description},
-      where: 'id = ?',
-      whereArgs: [id],
+  // --- UPDATE DB
+  void _updateDB() async {
+    int upt = await database.rawUpdate(
+      'UPDATE Test SET nickname =? WHERE name = ?',
+      ['Mando', 'Din Djarin'],
     );
-    _loadItems();
+    print('Update: $upt');
   }
 
-  Future<void> _deleteItem(int id) async {
-    await database.delete('items', where: 'id = ?', whereArgs: [id]);
-    _loadItems();
-  }
-
-  void _showInsertDialog() {
-    TextEditingController nameController = TextEditingController();
-    TextEditingController descriptionController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Insertar Elemento'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: 'Nombre'),
-              ),
-              TextField(
-                controller: descriptionController,
-                decoration: InputDecoration(labelText: 'Descripción'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.isNotEmpty) {
-                  _insertItem(nameController.text, descriptionController.text);
-                  Navigator.pop(context);
-                }
-              },
-              child: Text('Insertar'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showUpdateDialog(Map<String, dynamic> item) {
-    TextEditingController nameController = TextEditingController(
-      text: item['name'],
-    );
-    TextEditingController descriptionController = TextEditingController(
-      text: item['description'],
-    );
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Actualizar Elemento'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: 'Nombre'),
-              ),
-              TextField(
-                controller: descriptionController,
-                decoration: InputDecoration(labelText: 'Descripción'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.isNotEmpty) {
-                  _updateItem(
-                    item['id'],
-                    nameController.text,
-                    descriptionController.text,
-                  );
-                  Navigator.pop(context);
-                }
-              },
-              child: Text('Actualizar'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showDeleteDialog(Map<String, dynamic> item) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Eliminar Elemento'),
-          content: Text(
-            '¿Estás seguro de que quieres eliminar "${item['name']}"?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _deleteItem(item['id']);
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: Text('Eliminar', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
+  // --- SHOW DB
+  void _showDB() async {
+    List<Map> show = await database.rawQuery('SELECT * FROM Test');
+    print(show);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Practica 14 - SQLite'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _showInsertDialog,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                    ),
-                    child: Text(
-                      'INSERT',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: items.isNotEmpty
-                        ? () => _showDeleteDialog(items.last)
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                    ),
-                    child: Text(
-                      'REMOVE',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: items.isNotEmpty
-                        ? () => _showUpdateDialog(items.last)
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                    ),
-                    child: Text(
-                      'UPDATE',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _loadItems,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                    ),
-                    child: Text(
-                      'SHOW',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: ListTile(
-                    title: Text(item['name'] ?? 'Sin nombre'),
-                    subtitle: Text(item['description'] ?? 'Sin descripción'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => _showUpdateDialog(item),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _showDeleteDialog(item),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
+      appBar: AppBar(title: Text('Practica 14 - SQLite'), centerTitle: true),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                _insertDB();
               },
-            ),
-          ),
-        ],
-      ),
-    );
+              child: Text('INSERT'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+            ), // ElevatedButton
+            ElevatedButton(
+              onPressed: () {
+                _removeDB();
+              },
+              child: Text('REMOVE'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+            ), // ElevatedButton
+            ElevatedButton(
+              onPressed: () {
+                _updateDB();
+              },
+              child: Text('UPDATE'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+            ), // ElevatedButton
+            ElevatedButton(
+              onPressed: () {
+                _showDB();
+              },
+              child: Text('SHOW'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.white,
+              ),
+            ), // ElevatedButton
+          ],
+        ), // Column
+      ), // Center
+    ); // Scaffold
   }
 }
