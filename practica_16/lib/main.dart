@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'src/slivers_page.dart';
+import 'src/listview_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Material App',
-      home: SliversPage(),
+      home: const ListViewPage(),
     );
   }
 }
