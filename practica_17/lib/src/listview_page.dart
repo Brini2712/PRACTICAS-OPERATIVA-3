@@ -31,16 +31,58 @@ class _ListViewPageState extends State<ListViewPage> {
           return Dismissible(
             key: ValueKey(item['id']),
             background: Container(
-              color: Colors.green,
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.only(left: 16.0),
-              child: const Icon(Icons.library_add, color: Colors.white),
+              color: Colors.transparent,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16.0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.library_add, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Agregar', style: TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
             secondaryBackground: Container(
-              color: Colors.red,
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 16.0),
-              child: const Icon(Icons.cancel_outlined, color: Colors.white),
+              color: Colors.transparent,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.cancel_outlined, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Eliminar', style: TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
             confirmDismiss: (direction) async {
               // Left to right -> agregar, right to left -> eliminar
@@ -68,25 +110,7 @@ class _ListViewPageState extends State<ListViewPage> {
               ),
               title: Text(item['title_name'] ?? ''),
               subtitle: Text(item['genre'] ?? ''),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.library_add),
-                    color: Colors.green,
-                    onPressed: () =>
-                        handleAction(index, 'Agregar', remove: false),
-                    tooltip: 'Agregar',
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.cancel_outlined),
-                    color: Colors.red,
-                    onPressed: () =>
-                        handleAction(index, 'Eliminar', remove: true),
-                    tooltip: 'Eliminar',
-                  ),
-                ],
-              ),
+              trailing: null,
             ),
           );
         },
